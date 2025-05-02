@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         LinkedIn - Auto Ativar Modo Escuro (com controle de sessão)
+// @name         LinkedIn - Auto Ativar Modo Escuro (com retorno inteligente)
 // @namespace    https://www.linkedin.com/
-// @version      1.2
-// @description  Ativa o modo escuro automaticamente e evita loops no LinkedIn
+// @version      1.4
+// @description  Ativa o modo escuro automaticamente e retorna à URL original, mesmo ao seguir links externos como do Gmail.
 // @author       Naldo
 // @match        https://www.linkedin.com/*
 // @grant        none
@@ -12,16 +12,20 @@
     'use strict';
 
     const DARKMODE_FLAG = "darkModeActivated";
+    const RETURN_URL_KEY = "linkedinReturnUrl";
 
-    // Se ainda não ativamos o modo escuro nesta sessão
-    if (!sessionStorage.getItem(DARKMODE_FLAG)) {
-        // Se não estamos na página de dark mode, redireciona pra lá
-        if (!window.location.href.includes("/mypreferences/d/dark-mode")) {
-            window.location.href = "https://www.linkedin.com/mypreferences/d/dark-mode";
-            return;
-        }
+    const isDarkModePage = window.location.href.includes("/mypreferences/d/dark-mode");
 
-        // Espera o input aparecer e ativa se necessário
+    // Caso 1: Vindo de fora e ainda não ativou o modo escuro
+    if (!sessionStorage.getItem(DARKMODE_FLAG) && !isDarkModePage) {
+        // Salva a URL atual completa
+        localStorage.setItem(RETURN_URL_KEY, window.location.href);
+        window.location.href = "https://www.linkedin.com/mypreferences/d/dark-mode";
+        return;
+    }
+
+    // Caso 2: Já estamos na página de dark mode e ainda não ativamos
+    if (isDarkModePage && !sessionStorage.getItem(DARKMODE_FLAG)) {
         const waitForDarkModeInput = setInterval(() => {
             const darkModeRadio = document.querySelector('input#theme__dark');
 
@@ -36,13 +40,18 @@
                     console.log("🔘 Modo escuro já estava ativado.");
                 }
 
-                // Marca como feito para não repetir
                 sessionStorage.setItem(DARKMODE_FLAG, "true");
 
-                // Opcional: volta para a home
-                setTimeout(() => {
-                    window.location.href = "https://www.linkedin.com/feed/";
-                }, 1000);
+                // Recupera a URL original
+                const returnUrl = localStorage.getItem(RETURN_URL_KEY);
+                localStorage.removeItem(RETURN_URL_KEY);
+
+                if (returnUrl) {
+                    // Espera um pouco e volta
+                    setTimeout(() => {
+                        window.location.href = returnUrl;
+                    }, 1000);
+                }
             }
         }, 300);
     }
