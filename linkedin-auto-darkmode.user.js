@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LinkedIn - Auto Ativar Modo Escuro (com retorno inteligente)
 // @namespace    https://www.linkedin.com/
-// @version      1.7
+// @version      1.8
 // @description  Ativa o modo escuro automaticamente e retorna à URL original, evitando loops em autenticação de dois fatores.
 // @author       Naldo
 // @match        https://www.linkedin.com/*
@@ -15,9 +15,10 @@
     const RETURN_URL_KEY = "linkedinReturnUrl";
 
     const isDarkModePage = window.location.href.includes("/mypreferences/d/dark-mode");
-    const isAuthPage = window.location.href.includes("/uas/login") || 
-                       window.location.href.includes("/checkpoint/lg/") || 
-                       window.location.href.includes("/checkpoint/challenge/");
+    const isAuthPage = window.location.href.includes("/uas/login") ||
+                       window.location.href.includes("/checkpoint/lg/") ||
+                       window.location.href.includes("/checkpoint/challenge/") ||
+                       window.location.href.includes("/checkpoint/challengesV2/");
 
     // Impede a execução do script em páginas de login ou autenticação em dois fatores
     if (isAuthPage) {
